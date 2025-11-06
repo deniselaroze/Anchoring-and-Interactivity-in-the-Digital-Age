@@ -1,5 +1,5 @@
 
-***Anchoring and Interactivity in the Digital Age: How Online Interfaces Reshape Credit Card Repayment Decisions***
+## Anchoring and Interactivity in the Digital Age: How Online Interfaces Reshape Credit Card Repayment Decisions
 
 *Abstract*
 
@@ -10,7 +10,7 @@ Suboptimal credit card repayment decisions are often driven by anchoring on low 
 
 This repository contains all data, code, and experimental materials necessary to reproduce the findings of the study.
 
-- he approved Ethical Protocol (e.g., IRB documentation).
+- The Ethical Protocol (e.g., IRB documentation).
 
 - Survey instructions and questions.
 
