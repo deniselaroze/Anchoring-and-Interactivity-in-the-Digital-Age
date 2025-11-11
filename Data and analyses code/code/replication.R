@@ -33,14 +33,17 @@ r_min <- lm(Min ~ condition, data = data)
 r_partial <- lm(Partial ~ condition, data = data)
 r_total <- lm(Total ~ condition, data = data)
 
-coeftest(r_payment, vcov = vcovHC(r_payment, type = "HC1"))
-coeftest(r_min, vcov = vcovHC(r_min, type = "HC1"))
-coeftest(r_partial, vcov = vcovHC(r_partial, type = "HC1"))
-coeftest(r_total, vcov = vcovHC(r_total, type = "HC1"))
+robust_se <- list(
+  sqrt(diag(vcovHC(r_payment, type = "HC1"))),
+  sqrt(diag(vcovHC(r_min, type = "HC1"))),
+  sqrt(diag(vcovHC(r_partial, type = "HC1"))),
+  sqrt(diag(vcovHC(r_total, type = "HC1")))
+)
 
-stargazer(r_payment, r_min, r_partial, r_total, 
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          type = "text")
+stargazer(r_payment, r_min, r_partial, r_total,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 # Results: Linear Regression base SB
 dataSB <- data
@@ -48,8 +51,7 @@ dataSB$condition <- relevel(factor(dataSB$condition), ref = "SB")
 
 r_total    <- lm(Total   ~ condition, data = dataSB)
 
-robust_se <- lapply(list(r_total),
-                    function(x) sqrt(diag(vcovHC(x, type = "HC1"))))
+robust_se <- list(sqrt(diag(vcovHC(r_total, type = "HC1"))))
 
 stargazer(r_total,
           se = robust_se,
@@ -65,12 +67,15 @@ r_min <- lm(Min ~ condition, data = dataSH)
 r_partial <- lm(Partial ~ condition, data = dataSH)
 r_total <- lm(Total ~ condition, data = dataSH)
 
-coeftest(r_payment, vcov = vcovHC(r_payment, type = "HC1"))
-coeftest(r_min, vcov = vcovHC(r_min, type = "HC1"))
-coeftest(r_partial, vcov = vcovHC(r_partial, type = "HC1"))
-coeftest(r_total, vcov = vcovHC(r_total, type = "HC1"))
+robust_se <- list(
+  sqrt(diag(vcovHC(r_payment, type = "HC1"))),
+  sqrt(diag(vcovHC(r_min, type = "HC1"))),
+  sqrt(diag(vcovHC(r_partial, type = "HC1"))),
+  sqrt(diag(vcovHC(r_total, type = "HC1")))
+)
 
 stargazer(r_payment, r_min, r_partial, r_total, 
+          se = robust_se,
           star.cutoffs = c(0.05, 0.01, 0.001),
           type = "text")
 
@@ -162,34 +167,21 @@ dataTable  %>%
 # Results: Response times
 
 log_time <- lm(log(time) ~ condition, data = data)
-coeftest(log_time, vcov = vcovHC(log_time, type = "HC1"))
-stargazer(log_time, 
-          type = "text")
+robust_se <- list(sqrt(diag(vcovHC(log_time, type = "HC1"))))
+stargazer(log_time,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 bptest(log_time)
 
 coefs <- coef(log_time)
 pct_change <- (exp(coefs) - 1) * 100
 
-results <- data.frame(
+data.frame(
   Condition = names(coefs),
   Estimate  = round(coefs, 4),
   Percent_Change = round(pct_change, 2)
 )
-
-# Results: Confidence
-
-satis <- subset(data, !is.na(data$satis))
-satis$satis <- as.numeric(as.character(satis$satis))
-r_satis <- lm(satis ~ condition, data = satis)
-
-coeftest(r_satis, vcov = vcovHC(r_satis, type = "HC1"))
-robust_p  <- lapply(list(r_satis), function(m) {
-  coefs <- coeftest(m, vcov = vcovHC(m, type = "HC1"))
-  coefs[, "Pr(>|t|)"]
-})
-
-stargazer(r_satis, 
-          type = "text")
 
 ### Figure 2: Distribution of repayment amounts among users of the interactive tools.
 
@@ -358,96 +350,42 @@ stargazer(logit01, logit02, logit03,
 
 data_LC <- subset(data, is.na(data$FL)==FALSE) # Financial literacy
 model1_LC <- lm(Total ~ condition * FL, data = data_LC)
-coeftest(model1_LC, vcov = vcovHC(model1_LC, type = "HC1"))
+robust_se <- list(sqrt(diag(vcovHC(model1_LC, type = "HC1"))))
+stargazer(model1_LC,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 data_LF <- subset(data, is.na(data$LFees)==FALSE) # Late Fees
 model1_LF <- lm(Total ~ condition * LFees, data = data_LF)
-coeftest(model1_LF, vcov = vcovHC(model1_LF, type = "HC1"))
+robust_se <- list(sqrt(diag(vcovHC(model1_LF, type = "HC1"))))
+stargazer(model1_LF,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 data_DA <- subset(data, !(data$DA == "NA")) # Debt Aversion
 model1_DA <- lm(Total ~ condition * DA , data = data_DA)
-coeftest(model1_DA, vcov = vcovHC(model1_DA, type = "HC1"))
+robust_se <- list(sqrt(diag(vcovHC(model1_DA, type = "HC1"))))
+stargazer(model1_DA,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 data$male <- ifelse(data$Sex == "Male", 1, 0) # Male 
 model1_male <- lm(Total ~ condition * male, data = data)
-coeftest(model1_male, vcov = vcovHC(model1_male, type = "HC1"))
+robust_se <- list(sqrt(diag(vcovHC(model1_male, type = "HC1"))))
+stargazer(model1_male,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 model1_abc1 <- lm(Total ~ condition * ses, data = data) # Income
-coeftest(model1_abc1, vcov = vcovHC(model1_abc1, type = "HC1"))
-
-select <- dplyr::select
-
-extract_model <- function(model) {
-  model_summary <- coeftest(model, vcov = vcovHC(model, type = "HC1"))
-  
-  result <- data.frame(
-    term = rownames(model_summary),
-    estimate = model_summary[,1],
-    std.error = model_summary[,2],
-    p.value = model_summary[,4],
-    stringsAsFactors = FALSE
-  ) %>% 
-    mutate(
-      term = gsub("conditionSB", "Statement Balance", term),
-      term = gsub("conditionSliderHigh", "Slider-High", term),
-      term = gsub("conditionSliderLow", "Slider-Low", term),
-      term = gsub("conditionTable", "Reference Table", term),
-      term = gsub("FL", "X", term),
-      term = gsub("LFees", "X", term),
-      term = gsub("DA", "X", term),
-      term = gsub("male", "X", term),
-      term = gsub("ses", "X", term),
-      term = gsub(":", " × ", term),
-      formatted = sprintf("%.3f%s", estimate, 
-                          ifelse(p.value < 0.01, "***",
-                                 ifelse(p.value < 0.05, "**",
-                                        ifelse(p.value < 0.1, "*", "")))),
-      std.error = sprintf("(%.3f)", std.error)
-    )
-  
-  return(result)
-}
-
-results <- list(
-  "Financial Literacy (1)" = extract_model(model1_LC),
-  "Late Fees (2)" = extract_model(model1_LF),
-  "Debt Aversion (3)" = extract_model(model1_DA),
-  "Gender (Male) (4)" = extract_model(model1_male),
-  "SES (5)" = extract_model(model1_abc1)
-)
-
-create_table <- function(results) {
-  terms_to_keep <- c(
-    "Statement Balance", "Slider-High", "Slider-Low", "Reference Table", 
-    "X", "Statement Balance × X", "Slider-High × X", "Slider-Low × X", "Reference Table × X"
-  )
-  
-  final_table <- data.frame(Term = terms_to_keep, stringsAsFactors = FALSE)
-  
-  for (model_name in names(results)) {
-    model_df <- results[[model_name]] %>% 
-      filter(term %in% terms_to_keep) %>% 
-      select(term, formatted, std.error)  
-    
-    final_table <- final_table %>% 
-      left_join(model_df, by = c("Term" = "term"))
-    
-    colnames(final_table)[(ncol(final_table)-1):ncol(final_table)] <- 
-      paste0(model_name, c("_coef", "_se"))
-  }
-  
-  return(final_table)
-}
-
-regression_table <- create_table(results)
-
-regression_table[is.na(regression_table)] <- ""
-
-coef_table <- select(regression_table, "Term", "Financial Literacy (1)_coef", "Late Fees (2)_coef", "Debt Aversion (3)_coef", "Gender (Male) (4)_coef", "SES (5)_coef")
-kable(coef_table)
-
-se_table <- select(regression_table, "Term", "Financial Literacy (1)_se", "Late Fees (2)_se", "Debt Aversion (3)_se", "Gender (Male) (4)_se", "SES (5)_se")
-kable(se_table)
+robust_se <- list(sqrt(diag(vcovHC(model1_abc1, type = "HC1"))))
+stargazer(model1_abc1,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
 
 ### Table A.4: Linear regression models for high reference point and interactivity.
 
@@ -460,11 +398,34 @@ d2_min <- lm(Min ~ din + high , data = dataN)
 d2_partial <- lm(Partial ~ din + high , data = dataN)
 d2_total <- lm(Total ~ din + high , data = dataN)
 
-coeftest(d2_payment, vcov = vcovHC(d2_payment, type = "HC1"))
-coeftest(d2_min, vcov = vcovHC(d2_min, type = "HC1"))
-coeftest(d2_partial, vcov = vcovHC(d2_partial, type = "HC1"))
-coeftest(d2_total, vcov = vcovHC(d2_total, type = "HC1"))
+robust_se <- list(
+  sqrt(diag(vcovHC(d2_payment, type = "HC1"))),
+  sqrt(diag(vcovHC(d2_min, type = "HC1"))),
+  sqrt(diag(vcovHC(d2_partial, type = "HC1"))),
+  sqrt(diag(vcovHC(d2_total, type = "HC1")))
+)
 
-stargazer(d2_payment, d2_min, d2_partial, d2_total, 
-          star.cutoffs = c(0.05, 0.01, 0.001),
-          type = "text")
+stargazer(d2_payment, d2_min, d2_partial, d2_total,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
+
+### Table A.5: Linear regression model for satisfaction
+
+satis <- subset(data, !is.na(data$satis))
+satis$satis <- as.numeric(as.character(satis$satis))
+r_satis <- lm(satis ~ condition, data = satis)
+robust_se <- list(sqrt(diag(vcovHC(r_satis, type = "HC1"))))
+stargazer(r_satis,
+          se = robust_se,
+          type = "text",
+          star.cutoffs = c(0.05, 0.01, 0.001))
+
+robust_p  <- lapply(list(r_satis), function(m) {
+  coefs <- coeftest(m, vcov = vcovHC(m, type = "HC1"))
+  coefs[, "Pr(>|t|)"]
+})
+
+
+
+
